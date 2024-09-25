@@ -1,70 +1,95 @@
-import { Image, StyleSheet, Platform } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { FlatList, View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
+import axios from 'axios';
+import { useNavigation } from '@react-navigation/native';
 
-import { HelloWave } from '@/components/HelloWave';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
-
-export default function HomeScreen() {
-  return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({ ios: 'cmd + d', android: 'cmd + m' })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-        <ThemedText>
-          Tap the Explore tab to learn more about what's included in this starter app.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          When you're ready, run{' '}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
-  );
+interface Song {
+  id: number;
+  title: string;
+  artist: {
+    name: string;
+  };
+  album: {
+    cover_medium: string;
+  };
+  preview: string;
 }
 
+const HomeScreen: React.FC = () => {
+  const [songs, setSongs] = useState<Song[]>([]);
+  const [currentSong, setCurrentSong] = useState<Song | null>(null);
+  const navigation = useNavigation();
+
+  useEffect(() => {
+    const fetchSongs = async () => {
+      try {
+        const response = await axios.get('https://api.deezer.com/chart/0/tracks?limit=50');
+        setSongs(response.data.data);
+      } catch (error) {
+        console.error('Error fetching songs:', error);
+      }
+    };
+
+    fetchSongs();
+  }, []);
+
+  const renderItem = ({ item }: { item: Song }) => (
+    <TouchableOpacity 
+      style={[
+        styles.songItem, 
+        currentSong?.id === item.id ? styles.currentSong : null
+      ]} 
+      onPress={() => {
+        setCurrentSong(item);
+        navigation.navigate('Player', { song: item });
+      }}
+    >
+      <Image 
+        source={{ uri: item.album.cover_medium }}
+        style={styles.albumArt}
+      />
+      <View style={styles.songInfo}>
+        <Text style={styles.songTitle}>{item.title}</Text>
+        <Text style={styles.artistName}>{item.artist.name}</Text>
+      </View>
+    </TouchableOpacity>
+  );
+
+  return (
+    <FlatList
+      data={songs}
+      renderItem={renderItem}
+      keyExtractor={(item) => item.id.toString()}
+    />
+  );
+};
+
 const styles = StyleSheet.create({
-  titleContainer: {
+  songItem: {
     flexDirection: 'row',
+    padding: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#ccc',
     alignItems: 'center',
-    gap: 8,
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+  currentSong: {
+    backgroundColor: '#e0f7fa',
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  albumArt: {
+    width: 50,
+    height: 50,
+    marginRight: 10,
+  },
+  songInfo: {
+    flex: 1,
+  },
+  songTitle: {
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  artistName: {
+    color: '#555',
   },
 });
+
+export default HomeScreen;
