@@ -1,94 +1,134 @@
-import React, { useEffect, useState } from 'react';
-import { FlatList, View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
-import axios from 'axios';
+import React, { useState, useEffect } from 'react';
+import { View, Text, FlatList, Image, StyleSheet, TouchableOpacity, TextInput } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
+import songLibrary from '../../assets/data/library';
 
 interface Song {
-  id: number;
+  url: string;
   title: string;
-  artist: {
-    name: string;
-  };
-  album: {
-    cover_medium: string;
-  };
-  preview: string;
+  artist?: string;
+  artwork?: string;
+  rating?: number;
+  playlist?: string[];
 }
 
 const HomeScreen: React.FC = () => {
   const [songs, setSongs] = useState<Song[]>([]);
-  const [currentSong, setCurrentSong] = useState<Song | null>(null);
+  const [filteredSongs, setFilteredSongs] = useState<Song[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
   const navigation = useNavigation();
 
   useEffect(() => {
-    const fetchSongs = async () => {
-      try {
-        const response = await axios.get('https://api.deezer.com/chart/0/tracks?limit=50');
-        setSongs(response.data.data);
-      } catch (error) {
-        console.error('Error fetching songs:', error);
-      }
-    };
-
-    fetchSongs();
+    setSongs(songLibrary);
+    setFilteredSongs(songLibrary);
   }, []);
 
-  const renderItem = ({ item }: { item: Song }) => (
-    <TouchableOpacity 
-      style={[
-        styles.songItem, 
-        currentSong?.id === item.id ? styles.currentSong : null
-      ]} 
-      onPress={() => {
-        setCurrentSong(item);
-        navigation.navigate('Player', { song: item });
-      }}
-    >
-      <Image 
-        source={{ uri: item.album.cover_medium }}
-        style={styles.albumArt}
-      />
+  const handleSearch = (text: string) => {
+    setSearchQuery(text);
+    const filtered = songs.filter(song => 
+      song.title.toLowerCase().includes(text.toLowerCase()) ||
+      (song.artist && song.artist.toLowerCase().includes(text.toLowerCase()))
+    );
+    setFilteredSongs(filtered);
+  };
+
+  const navigateToPlayer = (song: Song, index: number) => {
+    if (!song) return; // Ensure the song exists
+  
+    // Navigate to Player screen with the current song and playlist as params
+    navigation.navigate('Player', { 
+      currentSong: song,  // Pass current song object
+      playlist: filteredSongs,  // Pass playlist for up-next functionality
+    });
+  };
+
+  const renderItem = ({ item, index }: { item: Song; index: number }) => (
+    <TouchableOpacity style={styles.songItem} onPress={() => navigateToPlayer(item, index)}>
+      <Image source={{ uri: item.artwork || 'https://example.com/placeholder.jpg' }} style={styles.artwork} />
       <View style={styles.songInfo}>
-        <Text style={styles.songTitle}>{item.title}</Text>
-        <Text style={styles.artistName}>{item.artist.name}</Text>
+        <Text style={styles.title}>{item.title}</Text>
+        <Text style={styles.artist}>{item.artist}</Text>
       </View>
+      <Ionicons name="chevron-forward" size={24} color="white" />
     </TouchableOpacity>
   );
 
   return (
-    <FlatList
-      data={songs}
-      renderItem={renderItem}
-      keyExtractor={(item) => item.id.toString()}
-    />
+    <View style={styles.container}>
+      <Text style={styles.songsLabel}>Songs</Text>
+      <View style={styles.searchContainer}>
+        <Ionicons name="search" size={20} color="#888" style={styles.searchIcon} />
+        <TextInput
+        
+          style={styles.searchBar}
+          placeholder="Search"
+          placeholderTextColor="#888"
+          value={searchQuery}
+          onChangeText={handleSearch}
+        />
+      </View>
+      <FlatList
+        data={filteredSongs}
+        renderItem={renderItem}
+        keyExtractor={(item, index) => index.toString()}
+      />
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#121212',
+    padding: 20,
+  },
+  songsLabel: {
+    color: 'white',
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    marginTop: 20,
+  },
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 20,
+    marginTop: 0,
+  },
+  searchIcon: {
+    marginRight: 10,
+  },
+  searchBar: {
+    height: 40,
+    backgroundColor: '#1f1f1f',
+    borderRadius: 10,
+    paddingHorizontal: 10,
+    color: 'white',
+    flex: 1,
+  },
   songItem: {
     flexDirection: 'row',
-    padding: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#ccc',
     alignItems: 'center',
+    marginBottom: 15,
   },
-  currentSong: {
-    backgroundColor: '#e0f7fa',
-  },
-  albumArt: {
+  artwork: {
     width: 50,
     height: 50,
+    borderRadius: 10,
     marginRight: 10,
   },
   songInfo: {
     flex: 1,
   },
-  songTitle: {
-    fontWeight: 'bold',
+  title: {
+    color: 'white',
     fontSize: 16,
+    fontWeight: 'bold',
   },
-  artistName: {
-    color: '#555',
+  artist: {
+    color: '#b3b3b3',
+    fontSize: 14,
   },
 });
 
