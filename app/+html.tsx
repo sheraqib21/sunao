@@ -30,7 +30,7 @@ export default function Root({ children }: PropsWithChildren) {
 
 const responsiveBackground = `
 body {
-  background-color: #FFFFFF;
+  background-color: #FFFFF;
 }
 @media (prefers-color-scheme: dark) {
   body {
