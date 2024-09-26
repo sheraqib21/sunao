@@ -17,7 +17,7 @@ interface PlayerParams {
   playlist: Song[];
 }
 
-const Player: React.FC = () => {
+const Player = () => {
   const route = useRoute<RouteProp<{ params: PlayerParams }, 'params'>>();
   const navigation = useNavigation();
   const { currentSong, playlist } = route.params;
