@@ -10,30 +10,25 @@ export default function TabLayout() {
 
   return (
     <Tabs
-      screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
-        tabBarInactiveTintColor: Colors[colorScheme ?? 'light'].tabIconDefault,
-        tabBarStyle: {
-          backgroundColor: Colors[colorScheme ?? 'light'].background,
-          borderTopWidth: 0,
-          height: 70, // Increased height for better touch targets
-          paddingBottom: 10, // Increased padding for a better look
-          elevation: 5, // Adds shadow for a more elevated look on Android
-          shadowColor: '#000', // Adds shadow color for iOS
-          shadowOffset: { width: 0, height: 2 }, // Shadow offset
-          shadowOpacity: 0.2, // Shadow opacity
-          shadowRadius: 4, // Shadow radius
-        },
-        tabBarLabelStyle: {
-          fontSize: 14, // Increased font size for readability
-          fontWeight: '600', // Slightly lighter font weight
-          marginTop: 5, // Added margin to separate label from icon
-        },
-        tabBarIconStyle: {
-          marginBottom: 0, // Adjusted margin for icon placement
-        },
-        headerShown: false,
-      }}>
+    screenOptions={{
+      tabBarActiveTintColor: '#FFFFFF', // White for active tab icons and labels
+      tabBarInactiveTintColor: '#888888', // Grey for inactive tab icons and labels
+      tabBarStyle: {
+        backgroundColor: '#121212', // Matching dark background as in your screenshot
+        borderTopWidth: 0,
+        height: 60, // Standard height for better touch targets
+        paddingBottom: 10, // Padding bottom for a better look
+        shadowOpacity: 0, // No shadow for a flat design
+      },
+      tabBarLabelStyle: {
+        fontSize: 12, // Smaller font size for labels
+        fontWeight: 'bold', // Bold font weight for clarity
+      },
+      tabBarIconStyle: {
+        marginBottom: -5, // Adjusting icon placement closer to the label
+      },
+      headerShown: false,
+    }}> 
       <Tabs.Screen
         name="index"
         options={{

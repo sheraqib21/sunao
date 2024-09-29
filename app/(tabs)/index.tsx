@@ -1,78 +1,198 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, FlatList, Image, StyleSheet, TouchableOpacity, TextInput } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
-import songLibrary from '../../assets/data/library';
+import { View, Text, Image, FlatList, TouchableOpacity, StyleSheet, Modal, StatusBar, Dimensions } from 'react-native';
+import { Audio } from 'expo-av';
+import Ionicons from 'react-native-vector-icons/Ionicons';
+import Slider from '@react-native-community/slider';
 
-interface Song {
-  url: string;
-  title: string;
-  artist?: string;
-  artwork?: string;
-  rating?: number;
-  playlist?: string[];
-}
+// Import songs data from the JSON file
+const songs = require('../../assets/data/library.json'); // Make sure the path is correct
 
-const HomeScreen: React.FC = () => {
-  const [songs, setSongs] = useState<Song[]>([]);
-  const [filteredSongs, setFilteredSongs] = useState<Song[]>([]);
-  const [searchQuery, setSearchQuery] = useState('');
-  const navigation = useNavigation();
+const screenWidth = Dimensions.get('window').width; // Get full screen width
+
+const MusicPlayer: React.FC = () => {
+  const [currentSong, setCurrentSong] = useState<any | null>(null);
+  const [sound, setSound] = useState<Audio.Sound | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [songDuration, setSongDuration] = useState(0);
+  const [currentPosition, setCurrentPosition] = useState(0);
 
   useEffect(() => {
-    setSongs(songLibrary);
-    setFilteredSongs(songLibrary);
-  }, []);
+    const interval = setInterval(() => {
+      if (sound && isPlaying) {
+        sound.getStatusAsync().then((status) => {
+          if (status.isLoaded && status.isPlaying) {
+            setCurrentPosition(status.positionMillis);
+            setSongDuration(status.durationMillis || 0);
+          }
+        });
+      }
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [sound, isPlaying]);
 
-  const handleSearch = (text: string) => {
-    setSearchQuery(text);
-    const filtered = songs.filter(song => 
-      song.title.toLowerCase().includes(text.toLowerCase()) ||
-      (song.artist && song.artist.toLowerCase().includes(text.toLowerCase()))
-    );
-    setFilteredSongs(filtered);
+  const playSound = async (song: any) => {
+    if (sound) {
+      await sound.stopAsync();
+      await sound.unloadAsync();
+    }
+
+    const { sound: newSound } = await Audio.Sound.createAsync({ uri: song.url });
+    setSound(newSound);
+    setIsPlaying(true);
+    setCurrentSong(song);
+
+    await newSound.playAsync();
+    setModalVisible(true);
   };
 
-  const navigateToPlayer = (song: Song, index: number) => {
-    if (!song) return; // Ensure the song exists
-  
-    // Navigate to Player screen with the current song and playlist as params
-    navigation.navigate('Player', { 
-      currentSong: song,  // Pass current song object
-      playlist: filteredSongs,  // Pass playlist for up-next functionality
-    });
+  const togglePlayPause = async () => {
+    if (sound) {
+      const status = await sound.getStatusAsync();
+      if (status.isPlaying) {
+        await sound.pauseAsync();
+        setIsPlaying(false);
+      } else {
+        await sound.playAsync();
+        setIsPlaying(true);
+      }
+    }
   };
 
-  const renderItem = ({ item, index }: { item: Song; index: number }) => (
-    <TouchableOpacity style={styles.songItem} onPress={() => navigateToPlayer(item, index)}>
-      <Image source={{ uri: item.artwork || 'https://example.com/placeholder.jpg' }} style={styles.artwork} />
-      <View style={styles.songInfo}>
-        <Text style={styles.title}>{item.title}</Text>
-        <Text style={styles.artist}>{item.artist}</Text>
-      </View>
-      <Ionicons name="chevron-forward" size={24} color="white" />
-    </TouchableOpacity>
-  );
+  const handleNext = () => {
+    const currentIndex = songs.findIndex((song: any) => song.title === currentSong?.title);
+    if (currentIndex < songs.length - 1) {
+      playSound(songs[currentIndex + 1]);
+    }
+  };
+
+  const handlePrevious = () => {
+    const currentIndex = songs.findIndex((song: any) => song.title === currentSong?.title);
+    if (currentIndex > 0) {
+      playSound(songs[currentIndex - 1]);
+    }
+  };
+
+  const formatTime = (millis: number) => {
+    const totalSeconds = Math.floor(millis / 1000);
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+  };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.songsLabel}>Songs</Text>
-      <View style={styles.searchContainer}>
-        <Ionicons name="search" size={20} color="#888" style={styles.searchIcon} />
-        <TextInput
-        
-          style={styles.searchBar}
-          placeholder="Search"
-          placeholderTextColor="#888"
-          value={searchQuery}
-          onChangeText={handleSearch}
-        />
-      </View>
+      <StatusBar barStyle="light-content" backgroundColor="#1a1a1a" />
+      
+      {/* Heading */}
+      <Text style={styles.heading}>All Songs</Text>
+
+      {/* Song List */}
       <FlatList
-        data={filteredSongs}
-        renderItem={renderItem}
-        keyExtractor={(item, index) => index.toString()}
+        data={songs} // Load all songs from the JSON file
+        renderItem={({ item }) => (
+          <TouchableOpacity style={styles.songItem} onPress={() => playSound(item)}>
+            <Image source={{ uri: item.artwork }} style={styles.songArtwork} />
+            <View style={styles.songDetails}>
+              <Text style={styles.songTitle}>{item.title}</Text>
+              <Text style={styles.songArtist}>{item.artist}</Text>
+            </View>
+          </TouchableOpacity>
+        )}
+        keyExtractor={(item) => item.title}
       />
+
+      {/* Mini Player */}
+      {currentSong && (
+        <TouchableOpacity style={styles.miniPlayer} onPress={() => setModalVisible(true)}>
+          <View style={styles.miniPlayerContent}>
+            <Image source={{ uri: currentSong.artwork }} style={styles.miniPlayerArtwork} />
+            <View style={styles.miniPlayerInfo}>
+              <Text style={styles.miniPlayerTitle}>{currentSong.title}</Text>
+              <Text style={styles.miniPlayerArtist}>{currentSong.artist}</Text>
+            </View>
+            <View style={styles.miniPlayerControls}>
+              <Ionicons name="heart" size={30} color="red" style={styles.miniHeartIcon} />
+              <TouchableOpacity onPress={togglePlayPause}>
+                <Ionicons name={isPlaying ? 'pause' : 'play'} size={30} color="white" />
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {/* Progress Bar */}
+          <Slider
+            style={styles.progressBarMini}
+            value={currentPosition}
+            minimumValue={0}
+            maximumValue={songDuration}
+            minimumTrackTintColor="#1db954"
+            maximumTrackTintColor="#ccc"
+            onSlidingComplete={async (value) => {
+              if (sound) {
+                await sound.setPositionAsync(value);
+              }
+            }}
+          />
+        </TouchableOpacity>
+      )}
+
+      {/* Full-Screen Player Modal */}
+      <Modal
+        animationType="slide"
+        transparent={false}
+        visible={modalVisible}
+        onRequestClose={() => setModalVisible(false)}
+      >
+        {currentSong && (
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Now Playing</Text>
+            <Text style={styles.modalArtist}>{currentSong.artist}</Text>
+            <Image source={{ uri: currentSong.artwork }} style={styles.modalArtwork} />
+
+            <Text style={styles.modalSongTitle}>{currentSong.title}</Text>
+
+            {/* Playback Progress */}
+            <Slider
+              style={styles.progressBar}
+              value={currentPosition}
+              minimumValue={0}
+              maximumValue={songDuration}
+              minimumTrackTintColor="#1db954"
+              maximumTrackTintColor="#ccc"
+              onSlidingComplete={async (value) => {
+                if (sound) {
+                  await sound.setPositionAsync(value);
+                }
+              }}
+            />
+
+            <View style={styles.timeContainer}>
+              <Text style={styles.timeText}>{formatTime(currentPosition)}</Text>
+              <Text style={styles.timeText}>{formatTime(songDuration)}</Text>
+            </View>
+
+            {/* Playback Controls */}
+            <View style={styles.controls}>
+              <TouchableOpacity onPress={handlePrevious}>
+                <Ionicons name="play-skip-back" size={40} color="white" />
+              </TouchableOpacity>
+
+              <TouchableOpacity onPress={togglePlayPause}>
+                <Ionicons name={isPlaying ? 'pause' : 'play'} size={60} color="white" />
+              </TouchableOpacity>
+
+              <TouchableOpacity onPress={handleNext}>
+                <Ionicons name="play-skip-forward" size={40} color="white" />
+              </TouchableOpacity>
+            </View>
+
+            {/* Close Button */}
+            <TouchableOpacity onPress={() => setModalVisible(false)}>
+              <Ionicons name="close" size={30} color="white" />
+            </TouchableOpacity>
+          </View>
+        )}
+      </Modal>
     </View>
   );
 };
@@ -80,56 +200,133 @@ const HomeScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#121212',
-    padding: 20,
+    backgroundColor: '#1a1a1a',
+    paddingHorizontal: 20,
+    paddingTop: 30,
   },
-  songsLabel: {
-    color: 'white',
+  heading: {
     fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 10,
-    marginTop: 20,
-  },
-  searchContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 20,
-    marginTop: 0,
-  },
-  searchIcon: {
-    marginRight: 10,
-  },
-  searchBar: {
-    height: 40,
-    backgroundColor: '#1f1f1f',
-    borderRadius: 10,
-    paddingHorizontal: 10,
     color: 'white',
-    flex: 1,
+    fontWeight: 'bold',
+    marginBottom: 15,
   },
   songItem: {
     flexDirection: 'row',
+    padding: 15,
     alignItems: 'center',
-    marginBottom: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: '#333',
   },
-  artwork: {
+  songArtwork: {
     width: 50,
     height: 50,
-    borderRadius: 10,
-    marginRight: 10,
+    borderRadius: 5,
   },
-  songInfo: {
-    flex: 1,
+  songDetails: {
+    marginLeft: 10,
   },
-  title: {
-    color: 'white',
+  songTitle: {
     fontSize: 16,
-    fontWeight: 'bold',
+    color: 'white',
   },
-  artist: {
-    color: '#b3b3b3',
+  songArtist: {
     fontSize: 14,
+    color: 'gray',
+  },
+  miniPlayer: {
+    position: 'absolute',
+    bottom: 0,
+    width: screenWidth,
+    backgroundColor: '#2b2b2b',
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    borderTopLeftRadius: 15,
+    borderTopRightRadius: 15,
+  },
+  miniPlayerContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  miniPlayerArtwork: {
+    width: 50,
+    height: 50,
+    borderRadius: 5,
+  },
+  miniPlayerInfo: {
+    flex: 1,
+    marginLeft: 10,
+  },
+  miniPlayerTitle: {
+    fontSize: 14,
+    color: 'white',
+  },
+  miniPlayerArtist: {
+    fontSize: 12,
+    color: 'gray',
+  },
+  miniHeartIcon: {
+    marginRight: 20,
+  },
+  miniPlayerControls: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  progressBarMini: {
+    width: '100%',
+    height: 20,
+    marginTop: 10,
+  },
+  modalContent: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#333',
+  },
+  modalTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: 'white',
+    marginBottom: 10,
+  },
+  modalArtist: {
+    fontSize: 18,
+    color: 'white',
+    marginBottom: 10,
+  },
+  modalArtwork: {
+    width: 300,
+    height: 300,
+    borderRadius: 10,
+    marginBottom: 20,
+  },
+  modalSongTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: 'white',
+    marginBottom: 20,
+  },
+  progressBar: {
+    width: '80%',
+    height: 40,
+    marginBottom: 10,
+  },
+  timeContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '80%',
+    marginBottom: 20,
+  },
+  timeText: {
+    color: 'white',
+  },
+  controls: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '60%',
+    alignItems: 'center',
+    marginBottom: 30,
   },
 });
 
-export default HomeScreen;
+export default MusicPlayer;
