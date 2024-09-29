@@ -73,6 +73,16 @@ const MusicPlayer: React.FC = () => {
     }
   };
 
+  const stopSoundAndCloseMiniPlayer = async () => {
+    if (sound) {
+      await sound.stopAsync();
+      await sound.unloadAsync();
+      setIsPlaying(false);
+      setSound(null);
+      setCurrentSong(null); // This will hide the mini-player
+    }
+  };
+
   const formatTime = (millis: number) => {
     const totalSeconds = Math.floor(millis / 1000);
     const minutes = Math.floor(totalSeconds / 60);
@@ -115,6 +125,10 @@ const MusicPlayer: React.FC = () => {
               <Ionicons name="heart" size={30} color="red" style={styles.miniHeartIcon} />
               <TouchableOpacity onPress={togglePlayPause}>
                 <Ionicons name={isPlaying ? 'pause' : 'play'} size={30} color="white" />
+              </TouchableOpacity>
+              {/* Cross Button to Stop Song and Close Mini Player */}
+              <TouchableOpacity onPress={stopSoundAndCloseMiniPlayer}>
+                <Ionicons name="close" size={30} color="white" style={styles.closeIcon} />
               </TouchableOpacity>
             </View>
           </View>
@@ -235,9 +249,9 @@ const styles = StyleSheet.create({
   },
   miniPlayer: {
     position: 'absolute',
-    bottom: 0,
+    bottom: 95, // Move it above the nav bar
     width: screenWidth,
-    backgroundColor: '#2b2b2b',
+    backgroundColor: 'black',
     paddingVertical: 10,
     paddingHorizontal: 15,
     borderTopLeftRadius: 15,
@@ -271,6 +285,9 @@ const styles = StyleSheet.create({
   miniPlayerControls: {
     flexDirection: 'row',
     alignItems: 'center',
+  },
+  closeIcon: {
+    marginLeft: 10,
   },
   progressBarMini: {
     width: '100%',
