@@ -5,9 +5,9 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import Slider from '@react-native-community/slider';
 
 // Import songs data from the JSON file
-const songs = require('../../assets/data/library.json'); // Make sure the path is correct
+const songsFromLibrary = require('../../assets/data/library.json');
 
-const screenWidth = Dimensions.get('window').width; // Get full screen width
+const screenWidth = Dimensions.get('window').width;
 
 const MusicPlayer: React.FC = () => {
   const [currentSong, setCurrentSong] = useState<any | null>(null);
@@ -16,6 +16,7 @@ const MusicPlayer: React.FC = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [songDuration, setSongDuration] = useState(0);
   const [currentPosition, setCurrentPosition] = useState(0);
+  const [songs, setSongs] = useState<any[]>([]); // This will contain both library and downloaded songs
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -31,6 +32,29 @@ const MusicPlayer: React.FC = () => {
     return () => clearInterval(interval);
   }, [sound, isPlaying]);
 
+  useEffect(() => {
+    fetchSongs();
+  }, []);
+
+  // Fetch audio files from the local server
+  const fetchSongs = async () => {
+    try {
+      const response = await fetch('http://192.168.10.235:3000/list'); // Replace with your machine's IP address
+      const data = await response.json(); // This will be a list of files like ['song1.m4a', 'song2.webm']
+
+      const downloadedSongs = data.map((file: string) => ({
+        title: file.split('.')[0], // File name without extension
+        url: `http://192.168.10.235:3000/downloads/${file}`, // Access the file from the server
+        artwork: `https://img.youtube.com/vi/YOUR_VIDEO_ID/hqdefault.jpg`, // Placeholder for artwork
+        artist: 'artist', // Default artist name, could be updated later
+      }));
+
+      setSongs([...songsFromLibrary, ...downloadedSongs]); // Combine library songs and downloaded songs
+    } catch (error) {
+      console.error('Error fetching songs:', error);
+    }
+  };
+
   const playSound = async (song: any) => {
     if (sound) {
       await sound.stopAsync();
@@ -41,7 +65,6 @@ const MusicPlayer: React.FC = () => {
     setSound(newSound);
     setIsPlaying(true);
     setCurrentSong(song);
-
     await newSound.playAsync();
     setModalVisible(true);
   };
@@ -99,7 +122,7 @@ const MusicPlayer: React.FC = () => {
 
       {/* Song List */}
       <FlatList
-        data={songs} // Load all songs from the JSON file
+        data={songs} // Load all songs from the library and downloaded songs
         renderItem={({ item }) => (
           <TouchableOpacity style={styles.songItem} onPress={() => playSound(item)}>
             <Image source={{ uri: item.artwork }} style={styles.songArtwork} />

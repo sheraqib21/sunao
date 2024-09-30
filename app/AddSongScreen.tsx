@@ -1,35 +1,64 @@
-import React from 'react';
-import { View, Text, Button, StyleSheet, TextInput } from 'react-native';
+import React, { useState } from 'react';
+import { View, TextInput, Button, StyleSheet, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 
 const AddSongScreen: React.FC = () => {
-  const navigation = useNavigation();
+  const [title, setTitle] = useState('');
+  const [artist, setArtist] = useState('');
+  const [url, setUrl] = useState('');
+  const [artwork, setArtwork] = useState('');
+
+  const navigation = useNavigation(); // To navigate back after adding song
+
+  const handleAddSong = async () => {
+    // Construct the YouTube thumbnail URL from the video URL
+    const videoId = url.split('v=')[1]?.split('&')[0]; // Extract video ID from URL
+    const thumbnailUrl = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`; // Construct thumbnail URL
+
+    const newSong = { title, artist, url, artwork: thumbnailUrl, playlist: [], rating: 0 };
+
+    try {
+      const response = await fetch('http://192.168.10.235:3000/add-song', { // Update with your machine's IP
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(newSong),
+      });
+
+      if (response.ok) {
+        Alert.alert('Success', 'Song added successfully');
+        navigation.goBack(); // Navigate back to home screen
+      } else {
+        Alert.alert('Error', 'Failed to add song');
+      }
+    } catch (error) {
+      console.error('Network request failed:', error);
+      Alert.alert('Error', 'Network request failed: ' + error.message);
+    }
+  };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Add New Song</Text>
-      
-      {/* Input fields for song details */}
       <TextInput
+        placeholder="Title"
+        value={title}
+        onChangeText={setTitle}
         style={styles.input}
-        placeholder="Song Title"
-        placeholderTextColor="#888"
       />
       <TextInput
-        style={styles.input}
         placeholder="Artist"
-        placeholderTextColor="#888"
+        value={artist}
+        onChangeText={setArtist}
+        style={styles.input}
       />
       <TextInput
+        placeholder="YouTube URL"
+        value={url}
+        onChangeText={setUrl}
         style={styles.input}
-        placeholder="Album"
-        placeholderTextColor="#888"
       />
-      
-      <Button title="Submit" onPress={() => console.log("Song added")} />
-      
-      {/* Button to go back */}
-      <Button title="Go Back" onPress={() => navigation.goBack()} />
+      <Button title="Add Song" onPress={handleAddSong} color="#841584" />
     </View>
   );
 };
@@ -37,25 +66,17 @@ const AddSongScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#1a1a1a',
-    paddingHorizontal: 20,
-    paddingTop: 50,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#fff',
-    marginBottom: 20,
-    textAlign: 'center',
+    padding: 20,
+    backgroundColor: '#f5f5f5',
   },
   input: {
-    height: 50,
-    backgroundColor: '#333',
-    color: '#fff',
+    height: 40,
+    borderColor: '#ccc',
+    borderWidth: 1,
     marginBottom: 15,
-    paddingHorizontal: 15,
-    borderRadius: 10,
-    fontSize: 16,
+    padding: 10,
+    borderRadius: 5,
+    backgroundColor: '#fff',
   },
 });
 
