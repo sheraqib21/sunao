@@ -1,5 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Image, FlatList, TouchableOpacity, StyleSheet, Modal, StatusBar, Dimensions } from 'react-native';
+import {
+  View,
+  Text,
+  Image,
+  FlatList,
+  TouchableOpacity,
+  StyleSheet,
+  Modal,
+  StatusBar,
+  Dimensions,
+  Alert
+} from 'react-native';
 import { Audio } from 'expo-av';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import Slider from '@react-native-community/slider';
@@ -17,6 +28,7 @@ const MusicPlayer: React.FC = () => {
   const [songDuration, setSongDuration] = useState(0);
   const [currentPosition, setCurrentPosition] = useState(0);
   const [songs, setSongs] = useState<any[]>([]); // This will contain both library and downloaded songs
+  const [selectedSong, setSelectedSong] = useState<any | null>(null); // To track the song to delete
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -42,11 +54,17 @@ const MusicPlayer: React.FC = () => {
       const response = await fetch('http://192.168.10.235:3000/list'); // Replace with your machine's IP address
       const data = await response.json(); // This will be a list of files like ['song1.m4a', 'song2.webm']
 
-      const downloadedSongs = data.map((file: string) => ({
-        title: file.split('.')[0], // File name without extension
-        url: `http://192.168.10.235:3000/downloads/${file}`, // Access the file from the server
-        artwork: `https://img.youtube.com/vi/YOUR_VIDEO_ID/hqdefault.jpg`, // Placeholder for artwork
-        artist: 'artist', // Default artist name, could be updated later
+      const downloadedSongs = await Promise.all(data.map(async (file: string) => {
+        const title = file.split('.')[0]; // Extract title from filename
+        const artist = 'Your Artist Name'; // Replace with your logic or metadata if available
+        const artwork = `http://192.168.10.235:3000/downloads/${title}.jpg`; // Assuming artwork files are named the same as the audio files
+
+        return {
+          title,
+          url: `http://192.168.10.235:3000/downloads/${file}`, // Access the file from the server
+          artwork: artwork, // Use the constructed artwork URL
+          artist: artist, // Use the associated artist name
+        };
       }));
 
       setSongs([...songsFromLibrary, ...downloadedSongs]); // Combine library songs and downloaded songs
@@ -113,6 +131,26 @@ const MusicPlayer: React.FC = () => {
     return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
   };
 
+  // Function to delete a song
+  const deleteSong = (song: any) => {
+    Alert.alert(
+      'Confirm Delete',
+      `Are you sure you want to delete "${song.title}"?`,
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Delete',
+          onPress: () => {
+            setSongs(songs.filter((s) => s.title !== song.title)); // Remove the song from state
+          },
+        },
+      ]
+    );
+  };
+
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#1a1a1a" />
@@ -124,7 +162,11 @@ const MusicPlayer: React.FC = () => {
       <FlatList
         data={songs} // Load all songs from the library and downloaded songs
         renderItem={({ item }) => (
-          <TouchableOpacity style={styles.songItem} onPress={() => playSound(item)}>
+          <TouchableOpacity
+            style={styles.songItem}
+            onPress={() => playSound(item)}
+            onLongPress={() => deleteSong(item)} // Long press to delete
+          >
             <Image source={{ uri: item.artwork }} style={styles.songArtwork} />
             <View style={styles.songDetails}>
               <Text style={styles.songTitle}>{item.title}</Text>
@@ -149,7 +191,6 @@ const MusicPlayer: React.FC = () => {
               <TouchableOpacity onPress={togglePlayPause}>
                 <Ionicons name={isPlaying ? 'pause' : 'play'} size={30} color="white" />
               </TouchableOpacity>
-              {/* Cross Button to Stop Song and Close Mini Player */}
               <TouchableOpacity onPress={stopSoundAndCloseMiniPlayer}>
                 <Ionicons name="close" size={30} color="white" style={styles.closeIcon} />
               </TouchableOpacity>

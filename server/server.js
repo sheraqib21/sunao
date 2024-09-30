@@ -27,13 +27,14 @@ app.post('/add-song', async (req, res) => {
     // Check if the URL is a YouTube link
     if (newSong.url.includes('youtube.com') || newSong.url.includes('youtu.be')) {
         try {
-            const videoId = newSong.url.split('v=')[1] || newSong.url.split('youtu.be/')[1];
+            const videoId = newSong.url.split('v=')[1]?.split('&')[0] || newSong.url.split('youtu.be/')[1];
             const videoInfo = await getYouTubeInfo(videoId);
             const mp3Path = await downloadYouTubeAsMP3(newSong.url, videoId);
             const thumbnailPath = await downloadThumbnail(videoInfo.thumbnail_url, videoId);
 
+            // Update newSong with the correct paths
             newSong.url = `/downloads/${videoId}.mp3`;
-            newSong.artwork = `/downloads/${videoId}.jpg`;
+            newSong.artwork = `/downloads/${videoId}.jpg`; // Ensure the artwork URL points to the downloaded image
 
             saveSong(newSong, res);
         } catch (error) {
@@ -41,6 +42,8 @@ app.post('/add-song', async (req, res) => {
             return res.status(500).send('Error processing YouTube link');
         }
     } else {
+        // For non-YouTube songs, simply save the song
+        newSong.artwork = thumbnail; // Assign the provided artwork URL
         saveSong(newSong, res);
     }
 });
@@ -118,7 +121,32 @@ app.get('/list', (req, res) => {
         res.json(audioFiles);
     });
 });
-
+// Endpoint to delete a song
+app.delete('/delete-song/:title', (req, res) => {
+    const title = req.params.title;
+  
+    const filePath = path.join(__dirname, '../assets/data/library.json');
+    
+    fs.readFile(filePath, 'utf8', (err, data) => {
+      if (err) {
+        console.error('Error reading library file:', err);
+        return res.status(500).send('Error reading library file');
+      }
+  
+      const songs = JSON.parse(data);
+      const updatedSongs = songs.filter(song => song.title !== title);
+  
+      fs.writeFile(filePath, JSON.stringify(updatedSongs, null, 2), (err) => {
+        if (err) {
+          console.error('Error writing to library file:', err);
+          return res.status(500).send('Error writing to library file');
+        }
+  
+        res.status(200).send('Song deleted successfully');
+      });
+    });
+  });
+  
 // Test the server's root URL
 app.get('/', (req, res) => {
     res.send('File server is running');

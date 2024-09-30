@@ -6,37 +6,38 @@ const AddSongScreen: React.FC = () => {
   const [title, setTitle] = useState('');
   const [artist, setArtist] = useState('');
   const [url, setUrl] = useState('');
-  const [artwork, setArtwork] = useState('');
 
   const navigation = useNavigation(); // To navigate back after adding song
 
   const handleAddSong = async () => {
-    // Construct the YouTube thumbnail URL from the video URL
     const videoId = url.split('v=')[1]?.split('&')[0]; // Extract video ID from URL
-    const thumbnailUrl = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`; // Construct thumbnail URL
+    const thumbnailUrl = `http://192.168.10.235:3000/downloads/${videoId}.jpg`; // Construct thumbnail URL
 
     const newSong = { title, artist, url, artwork: thumbnailUrl, playlist: [], rating: 0 };
 
-    try {
-      const response = await fetch('http://192.168.10.235:3000/add-song', { // Update with your machine's IP
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(newSong),
-      });
+    console.log('Adding new song:', newSong); // Log the new song object
 
-      if (response.ok) {
-        Alert.alert('Success', 'Song added successfully');
-        navigation.goBack(); // Navigate back to home screen
-      } else {
-        Alert.alert('Error', 'Failed to add song');
-      }
+    try {
+        const response = await fetch('http://192.168.10.235:3000/add-song', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(newSong),
+        });
+
+        if (response.ok) {
+            Alert.alert('Success', 'Song added successfully');
+            navigation.goBack(); // Navigate back to home screen
+        } else {
+            const errorMessage = await response.text(); // Get error message
+            Alert.alert('Error', `Failed to add song: ${errorMessage}`); // Show error message
+        }
     } catch (error) {
-      console.error('Network request failed:', error);
-      Alert.alert('Error', 'Network request failed: ' + error.message);
+        console.error('Network request failed:', error);
+        Alert.alert('Error', 'Network request failed: ' + error.message);
     }
-  };
+};
 
   return (
     <View style={styles.container}>
