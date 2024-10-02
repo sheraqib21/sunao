@@ -308,7 +308,7 @@ const styles = StyleSheet.create({
     color: 'white',
   },
   songArtist: {
-    fontSize: 14,
+    fontSize: 15,
     color: 'gray',
   },
   miniPlayer: {

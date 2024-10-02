@@ -64,7 +64,7 @@ const AddSongScreen: React.FC = () => {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    flex: 0.9,
     padding: 20,
     backgroundColor: '#f5f5f5',
   },
