@@ -3,21 +3,17 @@ import { View, TextInput, Button, StyleSheet, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 
 const AddSongScreen: React.FC = () => {
-  const [title, setTitle] = useState('');
-  const [artist, setArtist] = useState('');
   const [url, setUrl] = useState('');
-
   const navigation = useNavigation(); // To navigate back after adding song
 
   const handleAddSong = async () => {
-    // Construct the YouTube thumbnail URL from the video URL
     const videoId = url.split('v=')[1]?.split('&')[0]; // Extract video ID from URL
     const thumbnailUrl = `http://192.168.10.235:3000/downloads/${videoId}.jpg`; // Construct thumbnail URL
 
-    const newSong = { title, artist, url, artwork: thumbnailUrl, playlist: [], rating: 0 };
+    const newSong = { url, artwork: thumbnailUrl, playlist: [], rating: 0 };
 
     try {
-      const response = await fetch('http://192.168.10.235:3000/add-song', { // Update with your machine's IP
+      const response = await fetch('http://192.168.10.235:3000/add-song', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -27,7 +23,7 @@ const AddSongScreen: React.FC = () => {
 
       if (response.ok) {
         Alert.alert('Success', 'Song added successfully');
-        navigation.goBack(); // Navigate back to home screen
+        navigation.goBack(); // Navigate back to the home screen
       } else {
         Alert.alert('Error', 'Failed to add song');
       }
@@ -39,18 +35,6 @@ const AddSongScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      <TextInput
-        placeholder="Title"
-        value={title}
-        onChangeText={setTitle}
-        style={styles.input}
-      />
-      <TextInput
-        placeholder="Artist"
-        value={artist}
-        onChangeText={setArtist}
-        style={styles.input}
-      />
       <TextInput
         placeholder="YouTube URL"
         value={url}
@@ -64,7 +48,7 @@ const AddSongScreen: React.FC = () => {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 0.9,
+    flex: 1,
     padding: 20,
     backgroundColor: '#f5f5f5',
   },

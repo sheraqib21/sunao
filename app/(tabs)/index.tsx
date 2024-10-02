@@ -53,25 +53,32 @@ const MusicPlayer: React.FC = () => {
     try {
       const response = await fetch('http://192.168.10.235:3000/list'); // Replace with your machine's IP address
       const data = await response.json(); // This will be a list of files like ['song1.m4a', 'song2.webm']
-
-      const downloadedSongs = await Promise.all(data.map(async (file: string) => {
-        const title = file.split('.')[0]; // Extract title from filename
-        const artist = 'Your Artist Name'; // Replace with your logic or metadata if available
-        const artwork = `http://192.168.10.235:3000/downloads/${title}.jpg`; // Assuming artwork files are named the same as the audio files
-
-        return {
-          title,
-          url: `http://192.168.10.235:3000/downloads/${file}`, // Access the file from the server
-          artwork: artwork, // Use the constructed artwork URL
-          artist: artist, // Use the associated artist name
-        };
-      }));
-
+  
+      const downloadedSongs = await Promise.all(
+        data.map(async (file: string) => {
+          const videoId = file.split('.')[0]; // Extract the video ID from the filename
+          const videoInfo = await fetch(`https://www.youtube.com/oembed?url=http://www.youtube.com/watch?v=${videoId}&format=json`)
+            .then((res) => res.json())
+            .catch((error) => console.error('Error fetching video info:', error));
+  
+          const title = videoInfo?.title || 'Unknown Title'; // Get the actual video title or fallback to 'Unknown Title'
+          const artwork = `http://192.168.10.235:3000/downloads/${videoId}.jpg`; // Use the constructed artwork URL
+  
+          return {
+            title,
+            url: `http://192.168.10.235:3000/downloads/${file}`, // Access the file from the server
+            artwork: artwork, // Use the constructed artwork URL
+            artist: videoInfo?.author_name || 'Unknown Artist', // Use the YouTube channel name as artist
+          };
+        })
+      );
+  
       setSongs([...songsFromLibrary, ...downloadedSongs]); // Combine library songs and downloaded songs
     } catch (error) {
       console.error('Error fetching songs:', error);
     }
   };
+  
 
   const playSound = async (song: any) => {
     if (sound) {
