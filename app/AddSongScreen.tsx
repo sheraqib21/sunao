@@ -8,12 +8,12 @@ const AddSongScreen: React.FC = () => {
 
   const handleAddSong = async () => {
     const videoId = url.split('v=')[1]?.split('&')[0]; // Extract video ID from URL
-    const thumbnailUrl = `http://192.168.10.235:3000/downloads/${videoId}.jpg`; // Construct thumbnail URL
+    const thumbnailUrl = `http://192.168.10.179:3000/downloads/${videoId}.jpg`; // Construct thumbnail URL
 
     const newSong = { url, artwork: thumbnailUrl, playlist: [], rating: 0 };
 
     try {
-      const response = await fetch('http://192.168.10.235:3000/add-song', {
+      const response = await fetch('http://192.168.10.179:3000/add-song', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

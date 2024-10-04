@@ -51,7 +51,7 @@ const MusicPlayer: React.FC = () => {
   // Fetch audio files from the local server
   const fetchSongs = async () => {
     try {
-      const response = await fetch('http://192.168.10.235:3000/list'); // Replace with your machine's IP address
+      const response = await fetch('http://192.168.10.179:3000/list'); // Replace with your machine's IP address
       const data = await response.json(); // This will be a list of files like ['song1.m4a', 'song2.webm']
   
       const downloadedSongs = await Promise.all(
@@ -62,11 +62,11 @@ const MusicPlayer: React.FC = () => {
             .catch((error) => console.error('Error fetching video info:', error));
   
           const title = videoInfo?.title || 'Unknown Title'; // Get the actual video title or fallback to 'Unknown Title'
-          const artwork = `http://192.168.10.235:3000/downloads/${videoId}.jpg`; // Use the constructed artwork URL
+          const artwork = `http://192.168.10.180:3000/downloads/${videoId}.jpg`; // Use the constructed artwork URL
   
           return {
             title,
-            url: `http://192.168.10.235:3000/downloads/${file}`, // Access the file from the server
+            url: `http://192.168.10.179:3000/downloads/${file}`, // Access the file from the server
             artwork: artwork, // Use the constructed artwork URL
             artist: videoInfo?.author_name || 'Unknown Artist', // Use the YouTube channel name as artist
           };
