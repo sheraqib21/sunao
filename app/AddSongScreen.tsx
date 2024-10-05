@@ -3,7 +3,8 @@ import { View, TextInput, TouchableOpacity, StyleSheet, Text, SafeAreaView } fro
 import { useNavigation } from '@react-navigation/native';
 import { SERVER_IP } from '../config';
 import Icon from 'react-native-vector-icons/FontAwesome';
-import { showMessage } from 'react-native-flash-message';
+import Ionicons from 'react-native-vector-icons/Ionicons';
+import { showMessage } from 'react-native-flash-message';  // Import FlashMessage
 
 const AddSongScreen: React.FC = () => {
   const [url, setUrl] = useState('');
@@ -25,6 +26,7 @@ const AddSongScreen: React.FC = () => {
       });
 
       if (response.ok) {
+        // Display success message
         showMessage({
           message: "Success",
           description: "Song added to your library!",
@@ -34,8 +36,10 @@ const AddSongScreen: React.FC = () => {
           color: "#FFF", // Text color
           duration: 3000, // 3 seconds duration
         });
-        navigation.goBack();
+
+        navigation.goBack();  // Go back after showing message
       } else {
+        // Display error message
         showMessage({
           message: "Error",
           description: "Failed to add the song. Try again.",
@@ -60,12 +64,18 @@ const AddSongScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.container}>
+      {/* Back Button with Icon and Text */}
+      <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+        <Ionicons name="arrow-back" size={24} color="#FFF" style={styles.backIcon} />
+        <Text style={styles.backText}>Back</Text>
+      </TouchableOpacity>
+
       <View style={styles.content}>
         <View style={styles.iconContainer}>
           <Icon name="youtube-play" size={60} color="#FF0000" />
           <Text style={styles.title}>Add YouTube Song</Text>
         </View>
-        
+
         <View style={styles.inputContainer}>
           <Icon name="link" size={20} color="#666" style={styles.inputIcon} />
           <TextInput
@@ -85,7 +95,7 @@ const AddSongScreen: React.FC = () => {
           <Icon name="plus" size={20} color="#FFF" style={styles.buttonIcon} />
           <Text style={styles.buttonText}>Add to Library</Text>
         </TouchableOpacity>
-        
+
         <Text style={styles.helpText}>
           Paste a YouTube video URL to add the song to your library
         </Text>
@@ -98,6 +108,19 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#1a1a1a',
+  },
+  backButton: {
+    flexDirection: 'row',  // Ensures the icon and text are in a row
+    alignItems: 'center',  // Align icon and text vertically centered
+    paddingLeft: 15,
+    paddingTop: 45,
+  },
+  backIcon: {
+    marginRight: 5,  // Add some space between icon and text
+  },
+  backText: {
+    fontSize: 18,
+    color: '#FFF',  // White color for the back text
   },
   content: {
     flex: 1,

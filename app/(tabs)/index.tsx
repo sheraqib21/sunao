@@ -194,7 +194,7 @@ const MusicPlayer: React.FC = () => {
   );
 
   return (
-    <LinearGradient colors={['#121212', '#1F1F1F']} style={styles.container}>
+    <LinearGradient colors={['#121212', '#1F1F1F']} style={[styles.container, { flex: 1 }]}>
       <StatusBar barStyle="light-content" />
 
       <Text style={styles.heading}>Your Music</Text>
@@ -215,6 +215,8 @@ const MusicPlayer: React.FC = () => {
         renderItem={renderSongItem}
         keyExtractor={item => item.id}
         showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 100 }}  // Padding to allow scrolling
+        style={{ flex: 1 }}  // Ensure the FlatList fills available height
       />
 
       {currentSong && (
@@ -259,7 +261,7 @@ const MusicPlayer: React.FC = () => {
         visible={modalVisible}
         onRequestClose={() => setModalVisible(false)}
       >
-        <LinearGradient colors={['#121212', '#282828']} style={styles.modalContent}>
+        <LinearGradient colors={['#121212', '#282828']} style={[styles.modalContent, { flex: 1 }]}>
           <TouchableOpacity 
             style={styles.modalCloseButton} 
             onPress={() => setModalVisible(false)}
