@@ -1,19 +1,22 @@
 import React, { useState } from 'react';
-import { View, TextInput, Button, StyleSheet, Alert } from 'react-native';
+import { View, TextInput, TouchableOpacity, StyleSheet, Text, SafeAreaView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { SERVER_IP } from '../config';
+import Icon from 'react-native-vector-icons/FontAwesome';
+import { showMessage } from 'react-native-flash-message';
 
 const AddSongScreen: React.FC = () => {
   const [url, setUrl] = useState('');
-  const navigation = useNavigation(); // To navigate back after adding song
+  const navigation = useNavigation();
 
   const handleAddSong = async () => {
-    const videoId = url.split('v=')[1]?.split('&')[0]; // Extract video ID from URL
-    const thumbnailUrl = `http://192.168.10.179:3000/downloads/${videoId}.jpg`; // Construct thumbnail URL
+    const videoId = url.split('v=')[1]?.split('&')[0];
+    const thumbnailUrl = `${SERVER_IP}/downloads/${videoId}.jpg`;
 
     const newSong = { url, artwork: thumbnailUrl, playlist: [], rating: 0 };
 
     try {
-      const response = await fetch('http://192.168.10.179:3000/add-song', {
+      const response = await fetch(`${SERVER_IP}/add-song`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -22,44 +25,133 @@ const AddSongScreen: React.FC = () => {
       });
 
       if (response.ok) {
-        Alert.alert('Success', 'Song added successfully');
-        navigation.goBack(); // Navigate back to the home screen
+        showMessage({
+          message: "Success",
+          description: "Song added to your library!",
+          type: "success",
+          icon: { icon: "success", position: "left" },
+          backgroundColor: "#4BB543", // Custom green background color
+          color: "#FFF", // Text color
+          duration: 3000, // 3 seconds duration
+        });
+        navigation.goBack();
       } else {
-        Alert.alert('Error', 'Failed to add song');
+        showMessage({
+          message: "Error",
+          description: "Failed to add the song. Try again.",
+          type: "danger",
+          icon: { icon: "danger", position: "left" },
+          backgroundColor: "#FF0000", // Custom red background color
+          color: "#FFF",
+        });
       }
     } catch (error) {
       console.error('Network request failed:', error);
-      Alert.alert('Error', 'Network request failed: ' + error.message);
+      showMessage({
+        message: "Network Error",
+        description: error.message,
+        type: "danger",
+        icon: { icon: "danger", position: "left" },
+        backgroundColor: "#FF0000", // Custom red background color
+        color: "#FFF",
+      });
     }
   };
 
   return (
-    <View style={styles.container}>
-      <TextInput
-        placeholder="YouTube URL"
-        value={url}
-        onChangeText={setUrl}
-        style={styles.input}
-      />
-      <Button title="Add Song" onPress={handleAddSong} color="#841584" />
-    </View>
+    <SafeAreaView style={styles.container}>
+      <View style={styles.content}>
+        <View style={styles.iconContainer}>
+          <Icon name="youtube-play" size={60} color="#FF0000" />
+          <Text style={styles.title}>Add YouTube Song</Text>
+        </View>
+        
+        <View style={styles.inputContainer}>
+          <Icon name="link" size={20} color="#666" style={styles.inputIcon} />
+          <TextInput
+            placeholder="Paste YouTube URL here"
+            value={url}
+            onChangeText={setUrl}
+            style={styles.input}
+            placeholderTextColor="#999"
+          />
+        </View>
+
+        <TouchableOpacity 
+          style={styles.addButton} 
+          onPress={handleAddSong}
+          activeOpacity={0.8}
+        >
+          <Icon name="plus" size={20} color="#FFF" style={styles.buttonIcon} />
+          <Text style={styles.buttonText}>Add to Library</Text>
+        </TouchableOpacity>
+        
+        <Text style={styles.helpText}>
+          Paste a YouTube video URL to add the song to your library
+        </Text>
+      </View>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#1a1a1a',
+  },
+  content: {
+    flex: 1,
     padding: 20,
-    backgroundColor: '#f5f5f5',
+    justifyContent: 'center',
+  },
+  iconContainer: {
+    alignItems: 'center',
+    marginBottom: 30,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#FFF',
+    marginTop: 10,
+  },
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#333',
+    borderRadius: 10,
+    paddingHorizontal: 15,
+    marginBottom: 20,
+  },
+  inputIcon: {
+    marginRight: 10,
   },
   input: {
-    height: 40,
-    borderColor: '#ccc',
-    borderWidth: 1,
-    marginBottom: 15,
-    padding: 10,
-    borderRadius: 5,
-    backgroundColor: '#fff',
+    flex: 1,
+    height: 50,
+    color: '#FFF',
+    fontSize: 16,
+  },
+  addButton: {
+    flexDirection: 'row',
+    backgroundColor: '#FF0000',
+    padding: 15,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  buttonIcon: {
+    marginRight: 10,
+  },
+  buttonText: {
+    color: '#FFF',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  helpText: {
+    color: '#999',
+    textAlign: 'center',
+    marginTop: 20,
+    fontSize: 14,
   },
 });
 
