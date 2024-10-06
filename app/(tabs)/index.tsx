@@ -453,12 +453,12 @@ const styles = StyleSheet.create({
   },
   modalCloseButton: {
     position: 'absolute',
-    top: 40,
+    top: 10,
     left: 20,
   },
   modalArtwork: {
-    width: screenWidth - 80,
-    height: screenWidth - 80,
+    width: screenWidth - 90,
+    height: screenWidth - 90,
     borderRadius: 20,
     marginBottom: 30,
   },

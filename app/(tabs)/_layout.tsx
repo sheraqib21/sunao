@@ -12,9 +12,9 @@ export default function TabLayout() {
     <View style={{ flex: 1 }}>
       <Tabs
         screenOptions={{
-          tabBarActiveTintColor: '#FFFFFF', // White for active tab icons and labels
-          tabBarInactiveTintColor: '#999999', // Grey for inactive tab icons and labels
-          tabBarStyle: styles.tabBarStyle, // Custom tab bar styles
+          tabBarActiveTintColor: '#FF6F61',
+          tabBarInactiveTintColor: '#999999',
+          tabBarStyle: styles.tabBarStyle,
           tabBarLabelStyle: styles.tabBarLabelStyle,
           tabBarIconStyle: styles.tabBarIconStyle,
           headerShown: false,
@@ -40,29 +40,31 @@ export default function TabLayout() {
         />
       </Tabs>
 
-      {/* Floating Plus Button */}
-      <TouchableOpacity
-        style={styles.plusButton}
-        onPress={() => navigation.navigate('AddSongScreen')} // Navigate to AddSongScreen
-      >
-        <Ionicons name="add" size={40} color="#fff" /> 
-      </TouchableOpacity>
+      {/* Floating Plus Button with Outline */}
+      <View style={styles.plusButtonOutline}>
+        <TouchableOpacity
+          style={styles.plusButton}
+          onPress={() => navigation.navigate('AddSongScreen')}
+        >
+          <Ionicons name="add" size={40} color="#fff" />
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   tabBarStyle: {
-    position: 'absolute', // Ensure the tab bar is positioned at the bottom
-    bottom: 20, // Move it slightly above the bottom of the screen
+    position: 'absolute',
+    bottom: 20,
     left: 20,
     right: 20,
-    backgroundColor: '#333333', // Darker background for nav bar
-    borderRadius: 30, // Rounded corners for the tab bar
-    height: 70, // Adjust height for better visibility
+    backgroundColor: '#282828',
+    borderRadius: 30,
+    height: 70,
     paddingBottom: 10,
-    elevation: 5, // Add elevation for Android shadow
-    shadowColor: '#000', // Add shadow for iOS
+    elevation: 5,
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.1,
     shadowRadius: 10,
@@ -74,20 +76,28 @@ const styles = StyleSheet.create({
   tabBarIconStyle: {
     marginBottom: -5,
   },
-  plusButton: {
+  plusButtonOutline: {
     position: 'absolute',
-    bottom: 35, // Placed slightly above the tab bar
-    left: Dimensions.get('window').width / 2 - 40, // Center the button horizontally
-    backgroundColor: '#FF6F61', // Matching the color of the Plus button to complement nav bar
-    width: 75, // Increase button width
-    height: 75, // Increase button height
-    borderRadius: 40, // Circular shape
+    bottom: 30,
+    left: Dimensions.get('window').width / 2 - 43,
+    width: 81,
+    height: 81,
+    borderRadius: 43,
+    backgroundColor: '#ffffff',
     justifyContent: 'center',
     alignItems: 'center',
-    elevation: 5, // Shadow for Android
-    shadowColor: '#000', // Shadow for iOS
+    elevation: 5,
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.1,
     shadowRadius: 10,
+  },
+  plusButton: {
+    backgroundColor: '#FF6F61',
+    width: 75,
+    height: 75,
+    borderRadius: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });

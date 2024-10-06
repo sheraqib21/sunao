@@ -67,6 +67,7 @@ const styles = StyleSheet.create({
     height: screenHeight * 0.7, // Significantly increased height
     position: 'absolute',
     bottom: '-5%', // Positioned from bottom instead of top
+    left: '-45%',
   },
 });
 
