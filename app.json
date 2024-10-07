@@ -19,7 +19,8 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.aqibsher.sunao"
     },
     "web": {
       "bundler": "metro",
@@ -34,6 +35,11 @@
     },
     "assetBundlePatterns": [
       "**/*"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "f9b09259-9b83-4854-9b9e-f110ec29161c"
+      }
+    }
   }
 }
