@@ -350,7 +350,7 @@ const styles = StyleSheet.create({
     fontSize: 32,
     color: 'white',
     fontWeight: 'bold',
-    marginBottom: 20,
+    marginBottom: 19,
     paddingHorizontal: 20,
   },
   searchContainer: {
