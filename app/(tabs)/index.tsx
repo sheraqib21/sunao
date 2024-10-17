@@ -351,7 +351,7 @@ const styles = StyleSheet.create({
     color: 'white',
     fontWeight: 'bold',
     marginBottom: 20,
-    paddingHorizontal: 20,
+    paddingHorizontal: 19,
   },
   searchContainer: {
     flexDirection: 'row',
